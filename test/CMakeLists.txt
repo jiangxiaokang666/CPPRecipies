@@ -12,3 +12,5 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
 # 查找源文件并添加到可执行目标
 add_executable(test_thread_pool ../thread/ThreadPoolWithPackagedTask.cpp ./test_thread_pool.cpp)
+
+add_executable(test_thread_pool0 ../thread/thread_pool.cpp ./test_thread_pool0.cpp)

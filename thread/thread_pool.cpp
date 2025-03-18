@@ -81,7 +81,7 @@ void ThreadPool::Run(Task f)
 
 bool ThreadPool::IsFull()
 {
-    return m_max_task_size > 0 && m_tasks.size() > 0;
+    return m_max_task_size > 0 && m_tasks.size() > 0;//0代表没有上限
 }
 
 void ThreadPool::RunInThread()

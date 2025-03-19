@@ -1,4 +1,5 @@
 #include "../thread/thread_pool.h"
+#include "../thread/countdown_latch.h"
 
 #include <stdio.h>
 #include <chrono>
@@ -28,9 +29,8 @@ void Test(size_t max_size)
         pool.Run(std::bind(printString,str)); 
     }
     printf("Done add task.\n");
-
-    //fix me add countdown control
-    std::this_thread::sleep_for(std::chrono::seconds(5));
+    CountDownLatch count_down(1);
+    pool.Run(std::bind(&CountDownLatch::CountDown,&count_down));
     pool.Stop();
 }
 

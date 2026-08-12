@@ -1,4 +1,6 @@
 *.out
 **/bin/
-/build/
+build/
 /.vscode/
+*.exe
+*.obj

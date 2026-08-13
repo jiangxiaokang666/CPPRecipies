@@ -8,7 +8,7 @@
     - 类型信息
     - 静态变量
 - 生命周期 != 对象存在
-- vtable
+- vtable/vptr
   - call virtual function
     - load vptr
     - find table
@@ -55,3 +55,8 @@
   - 虚继承：解决共享基类
   - 虚函数：解决多态
 - C++指针类型转换不一定只是改变编译器眼里的类型，也可能改变指针的实际数值。
+  - static_cast
+    - 编译期确定 -> 简单offset调整
+  - dynamic_cast
+    - RTTI (run-time type information)
+    > 读取类型信息 -> 判断动态类型 -> 分析继承关系 -> 处理多继承/虚继承 -> 计算目标子对象 -> 调整指针

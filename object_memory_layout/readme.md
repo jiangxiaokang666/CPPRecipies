@@ -64,3 +64,32 @@
 - 纯虚函数
   - 纯虚析构函数仍然必须提供定义
 - 虚析构
+- new 和 operator new
+  - new-expression
+    - operator new -> raw memory 分配内存
+    - construct -> object 构造对象
+- operator new 和 malloc
+  
+|            | `malloc`  | `operator new`       |
+| ---------- | --------- | -------------------- |
+| 来源         | C         | C++                  |
+| 返回         | `void*`   | `void*`              |
+| 构造对象       | ❌         | ❌                    |
+| 失败行为       | `nullptr` | 通常抛 `std::bad_alloc` |
+| 可重载/替换     | —         | ✅                    |
+| 与 `new` 配合 | ❌直接关系     | ✅                    |
+  > operator new 底层可能使用 malloc，但标准并没有规定必须这么实现。
+  ```c++
+  void* operator new(std::size_t size)
+  {
+      return MyAllocator(size);
+  }
+  ```
+- placement new
+  - 在指定地址构造
+- 正常匹配
+  - new        → delete
+  - new[]      → delete[]
+  - malloc     → free
+  - operator new → operator delete
+

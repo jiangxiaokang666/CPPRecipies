@@ -68,6 +68,7 @@
   - new-expression
     - operator new -> raw memory 分配内存
     - construct -> object 构造对象
+  - 同理 delete 和 operator delete
 - operator new 和 malloc
   
 |            | `malloc`  | `operator new`       |
@@ -92,4 +93,30 @@
   - new[]      → delete[]
   - malloc     → free
   - operator new → operator delete
+  
+# 内存池
+- 解决
+  - allocator成本
+  - 内存碎片
+  - cache locality较差
+  - 分配延迟不够稳定
+- 核心
+  - placement new
+  - 连续访问 -> Cache Line -> CPU Cache
+# UE
+- FMemory
+> FMemory 是 UE 提供的统一内存操作入口/封装层
 
+| 操作                | 分配内存 | 调构造函数 |
+| ----------------- | ---: | ----: |
+| `malloc`          |    ✅ |     ❌ |
+| `FMemory::Malloc` |    ✅ |     ❌ |
+| `new T`           |    ✅ |     ✅ |
+| Placement New     |    ❌ |     ✅ |
+
+| 操作              | 调析构 | 释放内存 |
+| --------------- | --: | ---: |
+| `free`          |   ❌ |    ✅ |
+| `FMemory::Free` |   ❌ |    ✅ |
+| `delete`        |   ✅ |    ✅ |
+| `p->~T()`       |   ✅ |    ❌ |

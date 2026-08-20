@@ -120,3 +120,33 @@
 | `FMemory::Free` |   ❌ |    ✅ |
 | `delete`        |   ✅ |    ✅ |
 | `p->~T()`       |   ✅ |    ❌ |
+
+# cpu cache
+- cache line
+  - 通常一次性读取连续的64bytes
+- 类型
+  - cold miss
+  - capacity miss
+  - conflict miss
+- ECS
+  - Entity Component System
+- AoS
+  - Array of Structures
+- SoA
+  - Structure of Arrays
+# Object Pool 的三个等级
+- 减少分配
+  - malloc/free -> object pool
+- 连续内存
+  - linked list -> array pool
+- 数据导向
+  - AoS -> SoA
+  
+  |      | AoS                 | SoA                 |
+  | ---- | ------------------- | ------------------- |
+  | 全称   | Array of Structures | Structure of Arrays |
+  | 形式   | 对象数组                | 字段数组                |
+  | 优点   | 易写、面向对象             | Cache友好、SIMD友好      |
+  | 缺点   | 数据冗余加载              | 编程复杂                |
+  | 适合   | 少量对象                | 大量同类计算              |
+  | UE场景 | UObject             | Mass/Niagara        |

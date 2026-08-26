@@ -124,6 +124,7 @@
 # cpu cache
 - cache line
   - 通常一次性读取连续的64bytes
+  - 空间局部性(Spatial Locality)
 - 类型
   - cold miss
   - capacity miss

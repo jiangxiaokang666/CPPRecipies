@@ -1,20 +1,6 @@
 #include <vector>
-#include <iostream>
 
-void PrintSubtitle(std::string_view title)
-{
-    constexpr std::size_t width = 20;
-    const std::size_t contentWidth = std::min(title.size(), width);
-    const std::size_t leftPadding = (width - contentWidth) / 2;
-    const std::size_t rightPadding = width - contentWidth - leftPadding;
-    std::cout << "======"
-              << std::string(leftPadding, ' ')
-              << title.substr(0, contentWidth)
-              << std::string(rightPadding, ' ')
-              << "======\n";
-}
-
-#define SUBTITLE(str) PrintSubtitle(str)
+#include "../common/common_helper.h"
 
 int main()
 {
@@ -117,7 +103,7 @@ int main()
         请求vector尽量释放多余的capacity，让capacity靠近size。
         是一个非强制请求。
         实际开发里，不要在持有 vector 元素指针/引用的时候随便 shrink，会触发realloc
-        生命周期进入稳定低水位，而且确定短期不会重新增长时，再考虑 shrink。
+        
         */
         std::vector<int> v;
         v.reserve(1000);

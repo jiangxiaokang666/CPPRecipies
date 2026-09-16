@@ -134,7 +134,30 @@ private:
     {
 		assert(x != &nil_);
 		assert(x->left != &nil_);
+        NodeBase* y = x->left;
 
+        x->left = y->right;
+        if (y->right != &nil_)
+        {
+            y->right->parent = x;
+        }
+
+        y->parent = x->parent;
+        if (x->parent == &nil_)
+        {
+            root = y;
+        }
+        else if (x->parent->left == x)
+        {
+            x->parent->left = y;
+        }
+        else
+        {
+            x->parent->right = y;
+        }
+
+        y->right = x;
+        x->parent = y;
     }
 
     void fixInsert(NodeBase* z)

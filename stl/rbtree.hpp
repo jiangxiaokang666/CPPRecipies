@@ -169,11 +169,53 @@ private:
             if (parent == grand->left)
             {
                 NodeBase* uncle = grand->right;
-                //          grand(black)
-                //  parent(red)     uncle
-                //     z(red)
                 if (uncle->color == red)
                 {
+					//          grand(black)
+                    //  parent(red)     uncle(red)
+                    //      z(red)
+                    parent->color = Color::Black;
+                    uncle->color = Color::Black;
+                    grand->color = Color::Red;
+					//          grand(red)
+                    //  parent(black)     uncle(black)
+                    //      z(red)
+                    z = grand;
+                }
+                else
+                {
+                    if (z == parent->right)
+                    {
+						//          grand(black)
+                        //  parent(red)     uncle(black)
+                        //           z (red)
+                        z = parent;
+                        rotateLeft(z);
+                    }
+					//          grand(black)
+                    //  parent(red)     uncle(black)
+                    //z(red)
+                    z->parent->color = black;
+                    z->parent->parent->color = red;
+					//          grand(red)
+					//  parent(black)     uncle(black)
+					//z(red)
+                    rotateLeft(z->parent->parent);
+                    //                 uncle(black)
+					//          grand(red)
+					//  parent(black)     
+					//z(red)
+                }
+            }
+            else
+            {
+                NodeBase* uncle = grand->left;
+
+                if (uncle->color == Color::Red)
+                {
+					//          grand(black)
+                    //      uncle(red)   parent(red)
+                    //                      z(red)
                     parent->color = Color::Black;
                     uncle->color = Color::Black;
                     grand->color = Color::Red;
@@ -181,14 +223,49 @@ private:
                 }
                 else
                 {
-                    if (z == parent->right)
+					//          grand(black)
+					//      uncle(black)   parent(red)
+					//                       z(red)
+                    if (z == parent->left)
                     {
+						//          grand(black)
+	                    //      uncle(black)   parent(red)
+	                    //                    z(red)
                         z = parent;
-                        rotateLeft(z);
+                        rotateRight(z);
                     }
+					//           grand(black)
+                    //      uncle(black)   parent(red)
+                    //                            z(red)
+                    z->parent->color = Color::Black;
+                    z->parent->parent->color = Color::Red;
+					//           grand(red)
+					//      uncle(black)   parent(black)
+					//                             z(red)                  
+                    rotateRight(z->parent->parent);
+					//           parent(black)
+					//      grand(red)   z(red)
+					//  uncle(black)                          
                 }
             }
         }
+    }
+
+    void transplant(NodeBase* oldNode, NodeBase* newNode)
+    {
+        if (oldNode->parent == &nil_)
+        {
+            root = newNode;
+        }
+        else if (oldNode == oldNode->parent->left)
+        {
+            oldNode->parent->left = newNode;
+        }
+        else
+        {
+            oldNode->parent->right = newNode;
+        }
+        newNode->parent = oldNode->parent;
     }
 
 public:
@@ -288,4 +365,25 @@ public:
         ++size_;
         return { std::addressof(asNode(z)->data.second), true };
     }
+
+    bool erase(const Key& key)
+    {
+        NodeBase* z = findNode(key);
+        if (z == &nil_)
+        {
+            return false;
+        }
+
+        return false;//TODO
+    }
+
+    void clear() noexcept
+    {
+        destroy(root);
+        root = &nil_;
+        size_ = 0;
+        resetNil();
+    }
+
+
 };

@@ -268,6 +268,159 @@ private:
         newNode->parent = oldNode->parent;
     }
 
+    NodeBase* minimum(NodeBase* node) const
+    {
+        while (node->left != &nil_)
+        {
+            node = node->left;
+        }
+        return node;
+    }
+
+    void fixErase(NodeBase* x)
+    {
+        while (x != root_ && x->color == Color::Black)
+        {
+            
+            if (x == x->parent->left)
+            {
+                //想办法把兄弟的右孩子变成红,这样可以把父节点和兄弟的右孩子变黑+左旋 保证黑高不变
+                //那么兄弟就不能为红，因为不能两个红在一起
+                NodeBase* brother = x->parent->right;
+                //优先处理兄弟为红的情况
+                if (brother->color == Color::Red)
+                {
+                    /*       parent(B)                                 (B)          
+                    *    x(DB）    brother(R)         ->      parent(R)      (B)
+                    *            bl(B)      br(B)          x(DB)   brother(B)   
+                    */
+                    brother->color = Color::Black;
+                    brother->parent->color = Color::Red;
+                    rotateLeft(brother->parent);
+                    brother = x->parent->right;
+                }
+                /*
+                *              parent(*)
+                *          x(BB)   brother(B) 
+                */
+                //再处理兄弟的孩子
+                if (brother->left->color == Color::Black && brother->right->color == Color::Black)
+                {
+                    /*          parent(*)                       parent(DB)
+                    *       x(DB)      brother(B)       ->    x          brother(R) 
+                    *                 bl(B)    br(B)                    bl(B)   br(B)
+                    */
+                    brother->color = Color::Red;
+                    x = x->parent;
+                    continue;
+                }
+                /*          parent(*)                          parent(*)
+                *          x(DB)   brother(B)      ->       x(DB)    bl(B)
+                *                bl(R)   br(B)                         brother(R)
+                *                                                             br(B)
+                */
+                if (brother->left->color == Color::Red && brother->right->color == Color::Black)
+                {
+                    //有一个红色，变色左旋直接用
+                    brother->color = Color::Red;
+                    brother->left->color = Color::Black;
+                    rotateRight(brother);
+                    brother = x->parent->right;
+                }
+                /*
+                *            parent(o)                              brother(o)   
+                *          x(DB)   brother(B)           ->    parent(B）    br(B)
+                *                 bl   br(R)                  x     bl 
+                *               
+                *            
+                */
+                brother->color = x->parent->color;
+                x->parent->color = Color::Black;
+                brother->right->color = Color::Black;
+                rotateLeft(x->parent);
+                x = root_;
+            }
+            else
+            {
+                //反过来
+                NodeBase* brother = x->parent->left;
+                if (brother->color == Color::Red)
+                {
+                    brother->color = Color::Black;
+                    x->parent->color = Color::Red;
+                    rotateRight(x->parent);
+                    brother = x->parent->left;
+                }
+                if (brother->left->color = Color::Black && brother->right->color == Color::Black)
+                {
+                    brother->color = Color::Red;
+                    x = x->parent;
+                    continue;
+                }
+                if (brother->left->color == Color::Black && brother->right->color == Color::Red)
+                {
+                    brother->color = Color::Red;
+                    brother->right->color = Color::Black;
+                    rotateRight(brother);
+                    brother = x->parent->left;
+                }
+                brother->color = x->parent->color;
+                x->parent->color = Color::Black;
+                brother->left->color = Color::Black;
+                rotateRight(x->parent);
+                x = root_;
+            }
+        }
+    }
+
+    template<class F>
+    void traverse(const NodeBase* node, F& fn) const
+    {
+        if (node == &nil_)
+        {
+            return;
+        }
+        traverse(node->left, fn);
+        fn(asNode(node)->data);
+        traverse(node->right, fn);
+    }
+    //返回子树黑高，-1表示失败
+    int checkNode(NodeBase* node, NodeBase* parent, const Key* lower,
+        const Key* upper, size_t& count) const
+    {
+        if (node == &nil_)
+        {
+            return 1;
+        }
+        if (node->parent != parent)
+        {
+            return -1;
+        }
+        const Key& key = keyOf(node);
+        if (lower && !comp_(*lower, key))
+        {
+            return -1;
+        }
+        if (upper && !comp_(key, *upper))
+        {
+            return -1;
+        }
+        if (node->color == Color::Red && (node->left->color == Color::Red ||
+            node->right->color == Color::Red))
+        {
+            return -1;
+        }
+        ++count;
+        const int left = checkNode(node->left, node,  lower, std::addressof(key), count);
+        const int right = checkNode(node->right, node, std::addressof(key), upper, count);
+        if (left < 0 || right < 0 || left != right)
+        {
+            return -1;
+        }
+
+        return left + (node->color == Color::Black ? 1 : 0);
+    }
+
 public:
     explicit RBTree(Compare comp = Compare{}) : comp_(std::move(comp)), root(&nil)
     {
@@ -373,8 +526,57 @@ public:
         {
             return false;
         }
+        NodeBase* removedNode = z;
+        Color removedColor = z->color;
+        NodeBase* x = &nil_;
 
-        return false;//TODO
+        if (z->left == &nil_)
+        {
+            x = z->right;
+            transplant(z, z->right);
+        }
+        else if (z->right == &nil_)
+        {
+            x = z->left;
+            transplant(z, z->left);
+        }
+        else
+        {
+            //取中序后继
+            removedNode = minimum(z->right);
+            removedColor = removedNode->color;
+            x = removedNode->right;
+            if (removedNode->parent == z)
+            {
+                x->parent = removedNode;//if x == &nil_
+            }
+            else
+            {
+                //接z右节点
+                transplant(removedNode, removedNode->right);
+                removedNode->right = z->right;
+                removedNode->right->parent = removedNode;
+            }
+            //接z父节点
+            transplant(z, removedNode);
+            //接z左节点
+            removedNode->left = z->left;
+            removedNode->left->parent = removedNode;
+            removedNode->color = z->color;
+        }
+
+        delete asNode(z);
+        --size_;
+
+        if (removedColor == Color::Black)
+        {
+            fixErase(x);
+        }
+
+        resetNil();//nil_.parent
+        return true;
+
+        return false;
     }
 
     void clear() noexcept
@@ -385,5 +587,34 @@ public:
         resetNil();
     }
 
+    template<class F>
+    voif forEach(F&& fn) const
+    {
+        traverse(root_, fn);
+    }
+
+    bool validate() const
+    {
+        if (nil_.color != Color::Black ||
+            nil_.parent != &nil_ ||
+            nil_.left != &nil_ ||
+            nil_.right != &nil_)
+        {
+            return false;
+        }
+        if (root_ == &nil_)
+        {
+            return size_ == 0;
+        }
+
+        if (root_->parent != &nil_ || root_->color != Color::Black)
+        {
+            return false;
+        }
+
+        size_type count = 0;
+        const int blackHeight = checkNode(root_, &nil_, nullptr, nullptr, count);
+        return blackHeight >= 0 && count == size_;
+    }
 
 };

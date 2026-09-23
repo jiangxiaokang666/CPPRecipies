@@ -79,7 +79,7 @@ private:
 
     const NodeBase *findNode(const Key &key) const
     {
-        const NodeBase *cur = root;
+        const NodeBase *cur = root_;
         while (cur != &nil_)
         {
             if (comp_(key, keyOf(cur)))
@@ -114,7 +114,7 @@ private:
         y->parent = x->parent;
         if (x->parent == &nil_)
         {
-            root = y;
+            root_ = y;
         }
         else if(x->parent->left == x)
         {
@@ -145,7 +145,7 @@ private:
         y->parent = x->parent;
         if (x->parent == &nil_)
         {
-            root = y;
+            root_ = y;
         }
         else if (x->parent->left == x)
         {
@@ -169,7 +169,7 @@ private:
             if (parent == grand->left)
             {
                 NodeBase* uncle = grand->right;
-                if (uncle->color == red)
+                if (uncle->color == Color::Red)
                 {
 					//          grand(black)
                     //  parent(red)     uncle(red)
@@ -195,12 +195,12 @@ private:
 					//          grand(black)
                     //  parent(red)     uncle(black)
                     //z(red)
-                    z->parent->color = black;
-                    z->parent->parent->color = red;
+                    z->parent->color = Color::Black;
+                    z->parent->parent->color = Color::Red;
 					//          grand(red)
 					//  parent(black)     uncle(black)
 					//z(red)
-                    rotateLeft(z->parent->parent);
+                    rotateRight(z->parent->parent);
                     //                 uncle(black)
 					//          grand(red)
 					//  parent(black)     
@@ -242,20 +242,21 @@ private:
 					//           grand(red)
 					//      uncle(black)   parent(black)
 					//                             z(red)                  
-                    rotateRight(z->parent->parent);
+                    rotateLeft(z->parent->parent);
 					//           parent(black)
 					//      grand(red)   z(red)
 					//  uncle(black)                          
                 }
             }
         }
+        root_->color = Color::Black;
     }
 
     void transplant(NodeBase* oldNode, NodeBase* newNode)
     {
         if (oldNode->parent == &nil_)
         {
-            root = newNode;
+            root_ = newNode;
         }
         else if (oldNode == oldNode->parent->left)
         {
@@ -351,7 +352,7 @@ private:
                     rotateRight(x->parent);
                     brother = x->parent->left;
                 }
-                if (brother->left->color = Color::Black && brother->right->color == Color::Black)
+                if (brother->left->color == Color::Black && brother->right->color == Color::Black)
                 {
                     brother->color = Color::Red;
                     x = x->parent;
@@ -385,7 +386,7 @@ private:
         traverse(node->right, fn);
     }
     //返回子树黑高，-1表示失败
-    int checkNode(NodeBase* node, NodeBase* parent, const Key* lower,
+    int checkNode(const NodeBase* node, const NodeBase* parent, const Key* lower,
         const Key* upper, size_t& count) const
     {
         if (node == &nil_)
@@ -422,7 +423,7 @@ private:
     }
 
 public:
-    explicit RBTree(Compare comp = Compare{}) : comp_(std::move(comp)), root(&nil)
+    explicit RBTree(Compare comp = Compare{}) : comp_(std::move(comp)), root_(&nil_)
     {
         resetNil();
     }
@@ -434,8 +435,8 @@ public:
 
     void clear() noexcept
     {
-        destroy();
-        root = &nil_;
+        destroy(root_);
+        root_ = &nil_;
         size_ = 0;
         resetNil();
     }
@@ -462,7 +463,7 @@ public:
     Value *find(const Key &key)
     {
         NodeBase *node = findNode(key);
-        return node == &nil_ ? nullptr : std::addrressof(asNode(node)->data.second);
+        return node == &nil_ ? nullptr : std::addressof(asNode(node)->data.second);
     }
 
     bool contains(const Key &key) const
@@ -473,7 +474,7 @@ public:
     template <class K, class V>
     std::pair<Value *, bool> insert(K &&key, V &&value)
     {
-        NodeBase *cur = root;
+        NodeBase *cur = root_;
         NodeBase* parent = &nil_;
         // find pos
         bool insertLeft = false;
@@ -491,9 +492,9 @@ public:
                 cur = cur->right;
             }
             else
-            {
-                // already exist
-                return {std::addressof(asNode(cur)->data.second,false};
+			{
+				// already exist
+				return { std::addressof(asNode(cur)->data.second),false };
             }
         }
         Node* z = new Node(std::forward<K>(key), std::forward<V>(value));
@@ -504,7 +505,7 @@ public:
         if (parent == &nil_)
         {
             //root
-            root = z;
+            root_ = z;
         }
         else if (insertLeft)
         {
@@ -579,16 +580,8 @@ public:
         return false;
     }
 
-    void clear() noexcept
-    {
-        destroy(root);
-        root = &nil_;
-        size_ = 0;
-        resetNil();
-    }
-
     template<class F>
-    voif forEach(F&& fn) const
+    void forEach(F&& fn) const
     {
         traverse(root_, fn);
     }

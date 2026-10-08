@@ -15,7 +15,6 @@ struct CompactCounter
 	std::atomic<std::uint64_t> value{ 0 };
 };
 
-// 教学实验以目标机器的缓存行为 64 B 为前提。
 struct alignas(64) PaddedCounter
 {
 	std::atomic<std::uint64_t> value{ 0 };
@@ -71,7 +70,8 @@ int main()
 {
 	std::cout << "sizeof CompactCounter=" << sizeof(CompactCounter)
 		<< ", PaddedCounter=" << sizeof(PaddedCounter) << '\n';
-	for (int repeat = 0; repeat < 5; ++repeat) {
+	for (int repeat = 0; repeat < 5; ++repeat) 
+	{
 		run_case<CompactCounter>("compact");
 		run_case<PaddedCounter>("padded ");
 	}

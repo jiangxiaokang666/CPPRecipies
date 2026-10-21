@@ -3,6 +3,8 @@
 #include <exception>
 #include <mutex>
 #include <thread>
+#include <cassert>
+#include <iostream>
 
 class TaskGraph
 {
@@ -197,3 +199,50 @@ private:
         }
     }
 };
+
+int main()
+{
+    TaskGraph graph;
+    int a = 0, b= 0, c = 0, result = 0;
+    const auto A = graph.Add([&]{ a = 3;});
+    const auto B = graph.Add([&]{ b = a * 2;});
+    const auto C = graph.Add([&]{ c = a +4;});
+    const auto D = graph.Add([&]{ result = b + c;});
+    graph.Precede(A, B);
+    graph.Precede(A, C);
+    graph.Precede(B, D);
+    graph.Precede(C, D);
+    graph.Run(2);
+    assert(result == 13);
+    std::cout<<"result = "<< result<<'\n';
+
+    TaskGraph cyclic;
+    const auto x = cyclic.Add([]{});
+    const auto y = cyclic.Add([]{});
+    cyclic.Precede(x,y);
+    cyclic.Precede(y,x);
+    try
+    {
+        cyclic.Run(2);
+        assert(false);
+    }
+    catch(const std::logic_error&)
+    {
+        std::cout << "cycle detected\n";
+    }
+    
+    TaskGraph failing;
+    const auto f = failing.Add([]{ throw std::runtime_error("job failed");});
+    const auto after = failing.Add([]{assert(false);});
+    failing.Precede(f, after);
+    try
+    {
+        failing.Run(2);
+        assert(false);
+    }
+    catch(const std::runtime_error& )
+    {
+        std::cout << "error progated" << '\n';
+    }
+    
+}
